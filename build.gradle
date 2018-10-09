@@ -1,0 +1,36 @@
+plugins {
+    id 'java'
+}
+
+group 'TestAEProject'
+version '1'
+
+sourceCompatibility = 1.8
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '4.10.2'
+}
+
+task fatJar(type: Jar) {
+    manifest {
+        attributes 'Implementation-Title': 'Jar',
+                'Implementation-Version': version,
+                'Main-Class': 'TestAEProject'
+    }
+    baseName = project.name + '-all'
+    from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
+    with jar
+}
+
+dependencies {
+    compile 'ch.qos.logback:logback-classic:1.1.2'
+    compile 'org.apache.commons:commons-lang3:3.6'
+    compile 'org.jsoup:jsoup:1.11.2'
+}
+
+repositories {
+    mavenCentral()
+}
+
+
+

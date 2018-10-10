@@ -1,6 +1,4 @@
-import org.apache.commons.lang3.ArrayUtils;
 import org.jsoup.Jsoup;
-import org.jsoup.nodes.Attribute;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
@@ -22,9 +20,10 @@ public class TestApMain {
 
         String elementId = "make-everything-ok-button";
 
-        String originalPass = "./samples/sample-0-origin.html"; //args[0]
-
-        String diffPath =  "./samples/sample-4-the-mash.html";//args[1]
+//        String originalPass = "./samples/sample-0-origin.html";
+        String originalPass = args[0];
+        String diffPath = args[1];
+//        String diffPath =  "./samples/sample-4-the-mash.html";//args[1]
 //        String diffPath =  "./samples/sample-1-evil-gemini.html";//args[1]
 //        String diffPath =  "./samples/sample-2-container-and-clone.html";//args[1]
 //        String diffPath =  "./samples/sample-3-the-escape.html";//args[1]
@@ -39,13 +38,8 @@ public class TestApMain {
 
         stringifiedAttributesOpt.ifPresent(attrs -> LOGGER.info("Target element attrs: [{}]", attrs));
         AttrsBean originalBean = getOriginalAttrBean(buttonOpt);
+        findElementByAttrs(new File(diffPath), originalBean);
 
-        Elements el = findElementByAttrs(new File(diffPath), originalBean);
-        if (el != null){
-             System.out.println(getPath(el));
-        }else{
-            System.out.println("no elements were found");
-        }
     }
 
     private static Optional<Element> findElementById(File htmlFile, String targetElementId) {
@@ -75,7 +69,7 @@ public class TestApMain {
         return attrsBean;
     }
 
-    private static Elements findElementByAttrs(File diffHtmlFile, AttrsBean attrBean) {
+    private static void findElementByAttrs(File diffHtmlFile, AttrsBean attrBean) {
 
         try {
             Document doc = Jsoup.parse(
@@ -88,7 +82,7 @@ public class TestApMain {
             Elements elemCss = doc.getElementsByAttributeValue("css", attrBean.getCssClass());
             Elements elemHref = doc.getElementsByAttributeValue("href", attrBean.getHref());
             Elements elemTitle = doc.getElementsByAttributeValue("title", attrBean.getTitle());
-            Elements elemeRel = doc.getElementsByAttributeValue("rel", attrBean.getRel());
+            Elements elemRel = doc.getElementsByAttributeValue("rel", attrBean.getRel());
             Elements elementOnclick = doc.getElementsByAttributeValue("onclick", attrBean.getOnclick());
 
             HashSet<Element> els = new HashSet<>();
@@ -97,7 +91,7 @@ public class TestApMain {
             els.addAll(elemTitle);
             els.addAll(elemHref);
             els.addAll(elementOnclick);
-            els.addAll(elemeRel);
+            els.addAll(elemRel);
 
             elemId.clear();
             elemId.addAll(els);
@@ -110,27 +104,22 @@ public class TestApMain {
                 }
             }
 
-            return elemId;
-
+            if(elemId.isEmpty()){
+                LOGGER.info("No elements were found");
+            } else {
+                getPath(elemId);
+            }
         } catch (IOException e) {
             LOGGER.error("Error reading [{}] file", diffHtmlFile.getAbsolutePath(), e);
         }
-        return null;
     }
 
-
-    private static String getPath(Elements elements) {
-        String[] path = new String[elements.size()];
-        for (int i = 0; i < elements.size(); i++) {
-            Element el = elements.get(i);
-            Elements parentElems = el.parents();
-            String pathElem = parentElems.stream().map(attr -> attr.tagName()).collect(Collectors.joining(" > "));
-            path[i] = pathElem;
+    private static void getPath(Elements elements) {
+       for (int i = 0; i < elements.size(); i++) {
+            String pathElem = elements.get(i).parents().stream().map(attr -> attr.tagName()).collect(Collectors.joining(" > "));
+            LOGGER.info("Path for the element [{}]", pathElem);
         }
-        return ArrayUtils.toString(path);
     }
-
-
 }
 
 

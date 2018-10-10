@@ -17,12 +17,17 @@ public class TestApMain {
     private static final Logger LOGGER = LoggerFactory.getLogger(TestApMain.class);
     private static String CHARSET_NAME = "utf8";
 
+
     public static void main(String[] args) {
 
         String elementId = "make-everything-ok-button";
-        //String originalPass = "./samples/sample-0-origin.html"; //
-        String originalPass = args[0];
-        String diffPath =  args[1];//args[1]
+
+        String originalPass = "./samples/sample-0-origin.html"; //args[0]
+
+        String diffPath =  "./samples/sample-4-the-mash.html";//args[1]
+//        String diffPath =  "./samples/sample-1-evil-gemini.html";//args[1]
+//        String diffPath =  "./samples/sample-2-container-and-clone.html";//args[1]
+//        String diffPath =  "./samples/sample-3-the-escape.html";//args[1]
 
         Optional<Element> buttonOpt = findElementById(new File(originalPass), elementId);
 
@@ -33,11 +38,14 @@ public class TestApMain {
         );
 
         stringifiedAttributesOpt.ifPresent(attrs -> LOGGER.info("Target element attrs: [{}]", attrs));
-
         AttrsBean originalBean = getOriginalAttrBean(buttonOpt);
 
         Elements el = findElementByAttrs(new File(diffPath), originalBean);
-        System.out.println(ArrayUtils.toString(getPath(el)));
+        if (el != null){
+             System.out.println(getPath(el));
+        }else{
+            System.out.println("no elements were found");
+        }
     }
 
     private static Optional<Element> findElementById(File htmlFile, String targetElementId) {
@@ -94,29 +102,24 @@ public class TestApMain {
             elemId.clear();
             elemId.addAll(els);
 
-            for (Element el : elemId) {
-
-                List q = el.attributes().asList();
-                //for (Attribute at: q){
-
-                if (el.attr("style", "display:none") != null) {
-                    elemId.remove(el);
+            for (Iterator<Element> iter = elemId.listIterator();
+                 iter.hasNext();){
+                Element el = iter.next();
+                if(el.attributes().get("style").equals("display:none")){
+                    iter.remove();
                 }
-
-
-                return elemId;
             }
 
+            return elemId;
 
         } catch (IOException e) {
             LOGGER.error("Error reading [{}] file", diffHtmlFile.getAbsolutePath(), e);
         }
-
         return null;
     }
 
 
-    private static String[] getPath(Elements elements) {
+    private static String getPath(Elements elements) {
         String[] path = new String[elements.size()];
         for (int i = 0; i < elements.size(); i++) {
             Element el = elements.get(i);
@@ -124,7 +127,7 @@ public class TestApMain {
             String pathElem = parentElems.stream().map(attr -> attr.tagName()).collect(Collectors.joining(" > "));
             path[i] = pathElem;
         }
-        return path;
+        return ArrayUtils.toString(path);
     }
 
 
